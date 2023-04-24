@@ -10,7 +10,7 @@ services:
       - /home/datasci/tmp/mlruns:/mlruns/
     environment:
       - ARTIFACT_ROOT=gs://krian-mai-krian-project/mlflow-artifact-store
-      - SECRET_PATH=/home/datasci/anon/mlflow_script/secret.json
+      - SECRET_PATH=./secret.json
       - DB_URI=postgresql://admin:password@localhost:5432/mlflow-tracking-server-db
     network_mode: "host"
 
