@@ -1,0 +1,19 @@
+FROM python:3.10
+
+COPY secret.json .
+
+ARG ARTIFACT_ROOT
+ARG DB_URI
+ARG SECRET_PATH
+
+COPY ${SECRET_PATH} .
+
+RUN pip install -q --upgrade pip
+RUN pip install -q --upgrade mlflow
+RUN pip install -q --upgrade psycopg2
+RUN pip install -q --upgrade google-cloud-storage
+ENV GOOGLE_APPLICATION_CREDENTIALS=secret.json
+# RUN mkdir /mlruns/
+# RUN chmod 777 -R mlruns/
+
+ENTRYPOINT mlflow server --host 0.0.0.0 --default-artifact-root ${ARTIFACT_ROOT} --backend-store-uri ${DB_URI}
