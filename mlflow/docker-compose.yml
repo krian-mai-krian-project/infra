@@ -11,14 +11,14 @@ services:
     environment:
       - ARTIFACT_ROOT=gs://krian-mai-krian-project/mlflow-artifact-store
       - SECRET_PATH=./secret.json
-      - DB_URI=postgresql://admin:password@localhost:5432/mlflow-tracking-server-db
+      - DB_URI=postgresql://admin:password@localhost:5433/mlflow-tracking-server-db
     network_mode: "host"
 
-  db:
-    container_name: db
+  mlflow-db:
+    container_name: mlflow-db
     image: bitnami/postgresql
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       - POSTGRESQL_USERNAME=admin
       - POSTGRESQL_PASSWORD=password

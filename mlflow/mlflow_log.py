@@ -6,7 +6,7 @@ from mlflow import MlflowClient
 # from mlflow import log_metric, log_param, log_artifacts
 
 if __name__ == "__main__":
-    client = MlflowClient("http://20.2.67.135:5000", "http://20.2.67.135:5000")
+    client = MlflowClient("http://34.142.181.201:5000", "http://34.142.181.201:5000")
     print("Running mlflow_tracking.py")
     
     experiment_id = "0"
