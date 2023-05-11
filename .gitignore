@@ -165,5 +165,9 @@ dags/*
 logs/*
 plugins/*
 
+!dags/.gitkeep 
+!logs/.gitkeep 
+!plugins/.gitkeep 
+
 airflow/logs/
 airflow/plugins/
