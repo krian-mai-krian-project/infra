@@ -5,8 +5,5 @@
 
 # To add a new dags to our service
 - Write `dag(.py)` file in dags folder.
-- Then `restart` airflow container.
-
-# To add a new dags to our service
-- Write `dag(.py)` file in dags folder.
-- Then `restart` airflow container.
+- `Wait` for 5 minutes and then airflow container would refresh dir source.
+- The new `dag` will appear after that.
