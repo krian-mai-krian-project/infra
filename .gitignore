@@ -166,3 +166,6 @@ airflow/plugins/*
 
 !airflow/logs/.gitkeep
 !airflow/plugins/.gitkeep
+
+
+*experiment*
