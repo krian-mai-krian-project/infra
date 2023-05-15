@@ -53,8 +53,10 @@ with DAG(
     collection_name_items = dbname["query_items"]
     x = collection_name_items.insert_many(new_data, ordered = False)
     keys.extend(x.inserted_ids)
-    x = collection_name_keys.find_one_and_update({}, {"$set": {"keys": keys}}, upsert=False)
-    
+    collection_name_keys.find_one_and_update({}, {"$set": {"keys": keys}}, upsert=True)
+
+    collection_name_new_keys = dbname["query_new_keys"]
+    collection_name_new_keys.insert_one({"keys": x.inserted_ids})
     return new_data
 
   
