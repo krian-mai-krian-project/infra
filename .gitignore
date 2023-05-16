@@ -160,6 +160,7 @@ cython_debug/
 #.idea/
 
 *.json
+*.csv
 
 airflow/logs/*
 airflow/plugins/*
