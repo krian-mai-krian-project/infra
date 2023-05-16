@@ -2,23 +2,20 @@ version: "3.3"
 services:
   mlflow:
     container_name: mlflow
-    # image: seeloz/mlflow-server
-    build : .
+    build : 
+      context: .
+      args:
+        ARTIFACT_ROOT: gs://krian-mai-krian-proj/mlflow-artifact-store
+        SECRET_PATH: ./secret.json
+        DB_URI: postgresql://admin:password@mlflow-db:5432/mlflow-tracking-server-db
     ports:
       - "5000:5000"
     volumes:
-      - /home/datasci/tmp/mlruns:/mlruns/
-    environment:
-      - ARTIFACT_ROOT=gs://krian-mai-krian-project/mlflow-artifact-store
-      - SECRET_PATH=./secret.json
-      - DB_URI=postgresql://admin:password@localhost:5433/mlflow-tracking-server-db
-    network_mode: "host"
+      - ./mlruns:/mlruns/
 
   mlflow-db:
     container_name: mlflow-db
     image: bitnami/postgresql
-    ports:
-      - "5433:5432"
     environment:
       - POSTGRESQL_USERNAME=admin
       - POSTGRESQL_PASSWORD=password
