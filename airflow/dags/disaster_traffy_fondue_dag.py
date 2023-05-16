@@ -17,7 +17,7 @@ with DAG(
     default_args={
         "depends_on_past": False,
         "retries": 1,
-        "retry_delay": timedelta(minutes=5),
+        "retry_delay": timedelta(minutes=1),
     },
     description="A DAG for handling query_data and check_availble_in_db",
     schedule_interval = '@daily',
