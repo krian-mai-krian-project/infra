@@ -4,14 +4,23 @@ ARG ARTIFACT_ROOT
 ARG DB_URI
 ARG SECRET_PATH
 
+ENV ARTIFACT_ROOT=$ARTIFACT_ROOT
+ENV DB_URI=$DB_URI
+ENV SECRET_PATH=$SECRET_PATH
+
+RUN echo "${ARTIFACT_ROOT}"
+RUN echo "${DB_URI}"
+RUN echo "${SECRET_PATH}"
+
 COPY ${SECRET_PATH} .
 
 RUN pip install -q --upgrade pip
 RUN pip install -q --upgrade mlflow
 RUN pip install -q --upgrade psycopg2
 RUN pip install -q --upgrade google-cloud-storage
-ENV GOOGLE_APPLICATION_CREDENTIALS=secret.json
-# RUN mkdir /mlruns/
-# RUN chmod 777 -R mlruns/
+ENV GOOGLE_APPLICATION_CREDENTIALS=/secret.json
+
+RUN mkdir /mlruns/
+RUN chmod 777 -R /mlruns/
 
 ENTRYPOINT mlflow server --host 0.0.0.0 --default-artifact-root ${ARTIFACT_ROOT} --backend-store-uri ${DB_URI}
