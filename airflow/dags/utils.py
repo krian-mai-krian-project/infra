@@ -1,4 +1,6 @@
 from pymongo import MongoClient
+from random import random
+import logging
 def get_database():
  
    # Provide the mongodb atlas url to connect python to mongodb using pymongo
@@ -17,10 +19,20 @@ def get_id_from_url(url : str):
    id = filename.split(".")[0]
    return id
 
-from random import random
-
 def model_prediction(url : str):
    return {
       "embedding": [random(), random(), random()],
       "label": [1, 2, 3]
    }
+
+def upload_csv_to_bucket(filename, csv_data):        
+   from google.cloud import storage     
+
+   key_path = '/opt/airflow/keys/secret.json'     
+   client = storage.Client.from_service_account_json(key_path)   
+            
+   bucket_name = 'krian-mai-krian-proj'       
+   bucket = client.get_bucket(bucket_name)     
+   logging.info(f"Upload {csv_data}")
+   blob = bucket.blob(filename)        
+   blob.upload_from_string(csv_data, content_type='text/csv')
