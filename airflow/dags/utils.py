@@ -21,6 +21,6 @@ from random import random
 
 def model_prediction(url : str):
    return {
-      "emebedding": [random(), random(), random],
+      "embedding": [random(), random(), random()],
       "label": [1, 2, 3]
    }
