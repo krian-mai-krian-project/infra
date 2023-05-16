@@ -54,33 +54,41 @@ with DAG(
         new_data.append(data)
         recent_ids.add(id)
 
-    return new_data, keys
+    return {
+      "data":new_data, 
+      "keys": keys
+    }
   
   @task(task_id="interference_new_keys")
-  def interference_new_keys_task(new_data : list):
-    for data in new_data:
-      res = model_prediction(data)
+  def interference_new_keys_task(res : dict):
+    data = res['data']
+    for d in data:
+      res = model_prediction(d)
       data["emebedding"] = res["emebedding"]
       data["label"] = res["label"]
-    return new_data
+    res["data"] = data
+    return res
 
   @task(task_id="add_new_result_to_db")
-  def add_new_result_to_db_task(new_data : list, keys : list):
+  def add_new_result_to_db_task(res:dict):
     collection_name_items = dbname["query_items"]
     collection_name_keys = dbname["query_keys"]
-    if len(new_data)>0: 
-      x = collection_name_items.insert_many(new_data, ordered = False)
+    data = res['data']
+    keys = res['keys']
+    
+    if len(data)>0: 
+      x = collection_name_items.insert_many(data, ordered = False)
       keys.extend(x.inserted_ids)
       collection_name_keys.find_one_and_update({}, {"$set": {"keys": keys}}, upsert=True)
     logging.info(f"Total keys : {len(keys)}.\nNew keys : {len(x.inserted_ids)}")
-    return new_data
+    return res
   
   @task(task_id="compute_distance")
   def compute_distance_task(res : dict):
     return 
 
   res = query_data_task()
-  new_data, keys = check_availble_in_db_task(res)
-  new_data = interference_new_keys_task(new_data)
-  new_data = add_new_result_to_db_task(new_data)
-  task = compute_distance_task(task)
+  res = check_availble_in_db_task(res)
+  res = interference_new_keys_task(res)
+  res = add_new_result_to_db_task(res)
+  res = compute_distance_task(res)
