@@ -5,6 +5,7 @@ import pandas as pd
 myclient = pymongo.MongoClient("mongodb://root:example@localhost:27017/")
 mydb = myclient["query_result"]
 mycol = mydb["query_keys"]
+
 keys = mycol.find_one()['keys']
 keys_mapper = { k:i for i, k in enumerate(keys)}
 

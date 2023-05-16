@@ -166,9 +166,10 @@ mlflow/mlruns/*
 
 airflow/logs/*
 airflow/plugins/*
+airflow/keys/*
 
 !airflow/logs/.gitkeep
 !airflow/plugins/.gitkeep
-
+!airflow/keys/.gitkeep
 
 *experiment*
