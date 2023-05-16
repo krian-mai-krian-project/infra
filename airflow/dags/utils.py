@@ -16,3 +16,11 @@ def get_id_from_url(url : str):
    filename = url.split("/")[-1]
    id = filename.split(".")[0]
    return id
+
+from random import random
+
+def model_prediction(url : str):
+   return {
+      "emebedding": [random(), random(), random],
+      "label": [1, 2, 3]
+   }

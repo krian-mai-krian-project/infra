@@ -4,7 +4,11 @@ import logging
 from airflow import DAG
 from airflow.decorators import task
 from datetime import datetime, timedelta
-from utils import get_database, get_id_from_url
+from utils import (
+  get_database, 
+  get_id_from_url,
+  model_prediction
+)
 
 dbname = get_database()
 
@@ -15,7 +19,7 @@ with DAG(
         "retries": 1,
         "retry_delay": timedelta(minutes=5),
     },
-    description="A simple tutorial DAG",
+    description="A DAG for handling query_data and check_availble_in_db",
     schedule_interval = '@daily',
     start_date=datetime.now(),
     catchup=False,
@@ -29,7 +33,7 @@ with DAG(
     return x.json()
 
   @task(task_id="check_availble_in_db")
-  def check_availble_in_db(res : dict):
+  def check_availble_in_db_task(res : dict):
     collection_name_keys = dbname["query_keys"]
     data = collection_name_keys.find_one()
     if not isinstance(data, dict):
@@ -50,16 +54,33 @@ with DAG(
         new_data.append(data)
         recent_ids.add(id)
 
-    collection_name_items = dbname["query_items"]
-    x = collection_name_items.insert_many(new_data, ordered = False)
-    keys.extend(x.inserted_ids)
-    collection_name_keys.find_one_and_update({}, {"$set": {"keys": keys}}, upsert=True)
-
-    collection_name_new_keys = dbname["query_new_keys"]
-    collection_name_new_keys.insert_one({"keys": x.inserted_ids})
+    return new_data, keys
+  
+  @task(task_id="interference_new_keys")
+  def interference_new_keys_task(new_data : list):
+    for data in new_data:
+      res = model_prediction(data)
+      data["emebedding"] = res["emebedding"]
+      data["label"] = res["label"]
     return new_data
 
+  @task(task_id="add_new_result_to_db")
+  def add_new_result_to_db_task(new_data : list, keys : list):
+    collection_name_items = dbname["query_items"]
+    collection_name_keys = dbname["query_keys"]
+    if len(new_data)>0: 
+      x = collection_name_items.insert_many(new_data, ordered = False)
+      keys.extend(x.inserted_ids)
+      collection_name_keys.find_one_and_update({}, {"$set": {"keys": keys}}, upsert=True)
+    logging.info(f"Total keys : {len(keys)}.\nNew keys : {len(x.inserted_ids)}")
+    return new_data
   
+  @task(task_id="compute_distance")
+  def compute_distance_task(res : dict):
+    return 
 
-  task = query_data_task()
-  task = check_availble_in_db(task)
+  res = query_data_task()
+  new_data, keys = check_availble_in_db_task(res)
+  new_data = interference_new_keys_task(new_data)
+  new_data = add_new_result_to_db_task(new_data)
+  task = compute_distance_task(task)
