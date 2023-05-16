@@ -10,8 +10,6 @@ services:
         DB_URI: postgresql://admin:password@mlflow-db:5432/mlflow-tracking-server-db
     ports:
       - "5000:5000"
-    volumes:
-      - ./mlruns:/mlruns/
 
   mlflow-db:
     container_name: mlflow-db
