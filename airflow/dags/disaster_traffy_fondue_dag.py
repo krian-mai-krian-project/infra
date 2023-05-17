@@ -184,5 +184,5 @@ with DAG(
   res = check_availble_in_db_task(res)
   res = interference_new_keys_task(res)
   res = add_new_result_to_db_task(res)
-  res = compute_distance_task(res)
+  res = compute_distance_and_prepare_df_task(res)
   res = export_and_push_csv_task(res)
