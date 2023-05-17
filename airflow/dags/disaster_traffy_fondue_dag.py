@@ -97,8 +97,8 @@ with DAG(
     logging.info(f"Total keys : {len(keys)}.\nNew keys : {len(new_data)}")
     return None
 
-  @task(task_id="compute_distance")
-  def compute_distance_task(res:dict):
+  @task(task_id="ompute_distance_and_prepare_df")
+  def compute_distance_and_prepare_df_task(res:dict):
     collection_name_items = dbname["query_items"]
     collection_name_keys = dbname["query_keys"]
 
