@@ -18,6 +18,8 @@ threshold = 0.95
 
 dbname = get_database()
 
+filtered_type = ["ดินถล่ม/โคลนถล่ม", "ภัยหนาว", "ภัยแล้ง", "วาตภัย", "อัคคีภัย", "อาคารถล่ม/ทรุด", "อุทกภัย", "แผ่นดินไหว", "ไฟป่า"]
+
 with DAG(
     "disaster_traffy_fondue",
     default_args={
@@ -43,10 +45,9 @@ with DAG(
     collection_name_keys = dbname["query_keys"]
     data = collection_name_keys.find_one()
     if not isinstance(data, dict):
-      return {
-      "data": new_data, 
-      "keys": keys
-    }
+      collection_name_keys.insert_one({"keys":[]})
+      data = {}
+
     keys = data.get("keys", [])
 
     new_data = []
@@ -93,7 +94,7 @@ with DAG(
       x = collection_name_items.insert_many(new_data, ordered = False)
       keys.extend(x.inserted_ids)
       collection_name_keys.find_one_and_update({}, {"$set": {"keys": keys}}, upsert=True)
-    logging.info(f"Total keys : {len(keys)}.\nNew keys : {len(x.inserted_ids)}")
+    logging.info(f"Total keys : {len(keys)}.\nNew keys : {len(new_data)}")
     return None
 
   @task(task_id="compute_distance")
@@ -137,22 +138,46 @@ with DAG(
     edge_df = pd.DataFrame(edge_res, columns=["Source", "Target", "Weight"])
     logging.info(f"Edge df : {len(edge_df)} rows")
 
+    spatial_res = []
+
+    for i in range(n):    
+      obj = res[i]   
+      label = obj['label']
+      if label == 1:
+        continue
+      id = obj['properties']['ticket_id']
+      lat = obj['geometry']['coordinates'][1]
+      long = obj['geometry']['coordinates'][0]
+      photo_url = obj['properties']['photo_url']
+      state = obj['properties']['state']
+      type = obj['properties']['type']
+      description = obj['properties']['description']
+      timestamp = obj['properties']['timestamp']
+
+      spatial_res.append([id, lat, long, photo_url, state, type, description, timestamp])
+
+    spatial_df = pd.DataFrame(spatial_res, columns=["id", "lat", "long", "photo_url", "state", "type", "description", "timestamp"])
+
     return {
        "edge_df": edge_df,
-       "node_df": node_df
+       "node_df": node_df,
+       "spatial_df": spatial_df
     }
 
   @task(task_id="export_and_push_csv")
   def export_and_push_csv_task(res:dict):
     edge_df = res['edge_df']
     node_df = res['node_df']
+    spatial_df = res['spatial_df']
     if isinstance(edge_df, pd.DataFrame) and isinstance(node_df, pd.DataFrame):
       edge_csv = edge_df.to_csv(index = False)
       node_csv = node_df.to_csv(index = False)
+      spatial_csv = spatial_df.to_csv(index = False)
       now = datetime.now()
       date_time = now.strftime("%Y%m%d:%H:%M:%S")
       upload_csv_to_bucket(f"visualization/{date_time}/edge.csv", edge_csv)
       upload_csv_to_bucket(f"visualization/{date_time}/node.csv", node_csv)
+      upload_csv_to_bucket(f"visualization/{date_time}/spatial.csv", spatial_csv)
     return None
 
   res = query_data_task()
