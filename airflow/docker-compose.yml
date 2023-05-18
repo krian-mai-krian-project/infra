@@ -319,7 +319,7 @@ services:
       context: ./../../model/api/
     ports:
       - 8789:8789 
-    network_mode: "host"
+    # network_mode: "host"
 
 volumes:
   postgres-db-volume:

@@ -20,6 +20,8 @@ dbname = get_database()
 
 filtered_type = ["ดินถล่ม/โคลนถล่ม", "ภัยหนาว", "ภัยแล้ง", "วาตภัย", "อัคคีภัย", "อาคารถล่ม/ทรุด", "อุทกภัย", "แผ่นดินไหว", "ไฟป่า"]
 
+max_number = 30
+
 with DAG(
     "disaster_traffy_fondue",
     default_args={
@@ -28,9 +30,8 @@ with DAG(
         "retry_delay": timedelta(minutes=1),
     },
     description="A DAG for handling query_data and check_availble_in_db",
-    schedule_interval = '@daily',
+    schedule_interval = '*/5 * * * *',
     start_date=datetime.now(),
-    catchup=False,
     tags=["TraffyFondue"],
 ) as dag:
 
@@ -52,17 +53,31 @@ with DAG(
 
     new_data = []
     features = res.get("features", list())
+
+    logging.info(f"Features: {features}")
+    logging.info(f"Keys: {keys}")
+    
     recent_ids = set()
     for data in features:
       if not isinstance(data, dict):
         continue
+
       photo_url = data.get("properties", {}).get("photo_url", "")
+      type = data.get("properties", {}).get("type", "")
+
+      if type not in filtered_type:
+        continue
+
       id = get_id_from_url(photo_url)
       data['_id'] = id
-
       if id not in keys and id not in recent_ids:
+        if len(recent_ids) >= max_number:
+          break
         new_data.append(data)
         recent_ids.add(id)
+
+    logging.info(f"New data: {new_data}")
+    logging.info(f"Recent ids: {recent_ids}")
 
     return {
       "data": new_data, 
@@ -125,10 +140,10 @@ with DAG(
     for i in range(n):
         for j in range(i+1, n):
             id1 = keys_mapper[res[i]['_id']]
-            emb1 = np.array(res[i]['embedding'])
+            emb1 = np.array(res[i]['embedding']).reshape(-1)
 
             id2 = keys_mapper[res[j]['_id']]
-            emb2 = np.array(res[j]['embedding'])
+            emb2 = np.array(res[j]['embedding']).reshape(-1)
 
             cos_sim = np.dot(emb1, emb2)/(np.linalg.norm(emb1)*np.linalg.norm(emb2))
 

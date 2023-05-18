@@ -19,11 +19,14 @@ def get_id_from_url(url : str):
    id = filename.split(".")[0]
    return id
 
-def model_prediction(url : str):
-   return {
-      "embedding": [random(), random(), random()],
-      "label": [1, 2, 3]
-   }
+import requests
+
+def model_prediction(photo_url : str):
+   url = 'http://model-server:8789/predict'
+   myobj = {'url': photo_url}
+   x = requests.post(url, json = myobj, timeout=10)
+   logging.info(x.json())
+   return x.json()
 
 def upload_csv_to_bucket(filename, csv_data):        
    from google.cloud import storage     
